@@ -13,13 +13,9 @@
 // These functions to be moved to includes/utilities.inc later
 
 function islandora_readership_reporter_test() {
-  return "hello";
 }
 
 function islandora_readership_reporter_get_all_person_entities() {
-  // SPARQL query to get all person entities
-  // Filter out persons w/o emails
-  // Return array with display name & email
   $query = <<<EOQ
 SELECT ?object FROM <#ri> WHERE {
   ?object <info:fedora/fedora-system:def/model#hasModel> <info:fedora/islandora:personCModel> .
@@ -27,7 +23,22 @@ SELECT ?object FROM <#ri> WHERE {
 EOQ;
   $connection = islandora_get_tuque_connection();
   $results = $connection->repository->ri->sparqlQuery($query);
-  return $results;
+  $recipients = array();
+  foreach ($results as $result) {
+    $person_object = islandora_object_load($result['object']['value']);
+    if ($person_object['MADS']) {
+      $person_metadata = simplexml_load_string($person_object['MADS']->content);
+      if (isset($person_metadata->affiliation->email) && $person_metadata->affiliation->email != '') {
+        $person = array();
+        $person['pid'] = $person_object->id;
+        $person['name'] = (string) $person_metadata->authority->titleInfo->title;
+        $person['email'] = (string) $person_metadata->affiliation->email;
+        $recipients[] = $person;
+      }
+    }
+  }
+  
+  return $recipients;
 }
 
 function islandora_readership_reporter_build_readership_report($person) {
