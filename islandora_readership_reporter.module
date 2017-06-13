@@ -1,0 +1,42 @@
+<?php
+
+/**
+ * @file
+ * Defines all the hooks this module implements.
+ */
+
+/*
+- Make email coloring (primary, secondary) configurable
+*/
+
+
+// These functions to be moved to includes/utilities.inc later
+
+function islandora_readership_reporter_test() {
+  return "hello";
+}
+
+function islandora_readership_reporter_get_all_person_entities() {
+  // SPARQL query to get all person entities
+  // Filter out persons w/o emails
+  // Return array with display name & email
+  $query = <<<EOQ
+SELECT ?object FROM <#ri> WHERE {
+  ?object <info:fedora/fedora-system:def/model#hasModel> <info:fedora/islandora:personCModel> .
+}
+EOQ;
+  $connection = islandora_get_tuque_connection();
+  $results = $connection->repository->ri->sparqlQuery($query);
+  return $results;
+}
+
+function islandora_readership_reporter_build_readership_report($person) {
+  // Get all PIDs for a person via islandora_entities_get_related_pids
+  // Get usage stats for each PID via islandora_readership_reporter_get_pid_stats
+  // Return an HTML email with HTML tables for each PID
+}
+
+function islandora_readership_reporter_get_pid_stats($pid) {
+  // Get usage stats for PID
+  // return as array('current' => $x, 'all' => $y);
+}

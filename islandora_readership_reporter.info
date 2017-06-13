@@ -1,0 +1,8 @@
+name = Islandora Readership Reporter
+description = Sends Readership Reports to Person Entities
+dependencies[] = islandora
+dependencies[] = islandora_entities
+dependencies[] = islandora_usage_stats
+package = Islandora Tools
+core = 7.x
+version = 7.x-dev
