@@ -5,49 +5,21 @@
  * Defines all the hooks this module implements.
  */
 
-/*
-- Make email coloring (primary, secondary) configurable
-*/
 
+/**
+ * Implements hook_cron().
+ *
+ */
+function islandora_readership_reporter_cron() {
+  $now = time();
+  $day = (int) date('d', $now);
 
-// These functions to be moved to includes/utilities.inc later
+  // Run on the first of each month
+  $run_date = 20;
 
-function islandora_readership_reporter_test() {
-}
-
-function islandora_readership_reporter_get_all_person_entities() {
-  $query = <<<EOQ
-SELECT ?object FROM <#ri> WHERE {
-  ?object <info:fedora/fedora-system:def/model#hasModel> <info:fedora/islandora:personCModel> .
-}
-EOQ;
-  $connection = islandora_get_tuque_connection();
-  $results = $connection->repository->ri->sparqlQuery($query);
-  $recipients = array();
-  foreach ($results as $result) {
-    $person_object = islandora_object_load($result['object']['value']);
-    if ($person_object['MADS']) {
-      $person_metadata = simplexml_load_string($person_object['MADS']->content);
-      if (isset($person_metadata->affiliation->email) && $person_metadata->affiliation->email != '') {
-        $person = array();
-        $person['pid'] = $person_object->id;
-        $person['name'] = (string) $person_metadata->authority->titleInfo->title;
-        $person['email'] = (string) $person_metadata->affiliation->email;
-        $recipients[] = $person;
-      }
-    }
+  if ($day == $run_date) {
+    module_load_include('inc', 'islandora_readership_reporter', 'includes/utilities');
+    islandora_readership_reporter_run_readership_report();
   }
   
-  return $recipients;
-}
-
-function islandora_readership_reporter_build_readership_report($person) {
-  // Get all PIDs for a person via islandora_entities_get_related_pids
-  // Get usage stats for each PID via islandora_readership_reporter_get_pid_stats
-  // Return an HTML email with HTML tables for each PID
-}
-
-function islandora_readership_reporter_get_pid_stats($pid) {
-  // Get usage stats for PID
-  // return as array('current' => $x, 'all' => $y);
 }
