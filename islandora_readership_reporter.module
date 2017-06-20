@@ -16,10 +16,18 @@ function islandora_readership_reporter_cron() {
 
   // Run on the first of each month
   $run_date = 20;
-
   if ($day == $run_date) {
     module_load_include('inc', 'islandora_readership_reporter', 'includes/utilities');
-    islandora_readership_reporter_run_readership_report();
+    islandora_readership_reporter_run_readership_reports();
   }
-  
+}
+
+/**
+ * Implements hook_mail().
+ *
+ */
+function islandora_readership_reporter_mail($key, &$message, $params) {
+  switch($key) {
+    case 'report':
+  }
 }
