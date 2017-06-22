@@ -103,21 +103,23 @@ function islandora_readership_reporter_get_author_pids($person_id) {
     foreach ($search_results as $choice) {
       $results[$choice['PID']] = array(
         'PID' => $choice['PID'],
+        'title' => $choice['object_label'],
       );
     }
   }
   $pids = array();
   foreach ($results as $result) {
-    $pids[] = $result['PID'];
+    $pids[] = array('pid' => $result['PID'], 'title' => $result['title']);
   }
   return $pids;
 }
 
 function islandora_readership_reporter_run_readership_report($person_data) {
-  //watchdog('irr', json_encode($person_data));
 
   $now = time();
   $last_month = date('F', strtotime("-1 month"));
+  $last_month_year = date('Y', strtotime("-1 month"));
+  $subject = "{$last_month} Readership Report";
 
   $number_of_papers = count($person_data['works']);
   $paper_word = ($number_of_papers > 1 ? "papers" : "paper"); 
@@ -145,18 +147,42 @@ function islandora_readership_reporter_run_readership_report($person_data) {
   
 
   $msg = <<<MSG
+<!doctype html>
 <html>
 <head>
-  <title>{$last_month} Readership Report</title>
+  <title>{$subject}</title>
 </head>
 <body>
 <img src="https://www.lib.fsu.edu/sites/default/files/pictures/fsul-header.png" style="width:100%;"/>
 <p>Greetings {$person_data['name']},</p>
-<p>We are happy to report that your {$number_of_papers} {$paper_word} in the <a href="http://diginole.lib.fsu.edu/repository">FSU Research Repository</a> attracted
-{$user_monthly_views} views and {$user_monthly_downloads} downloads in {$last_month}, for a total of {$user_total_views} views and {$user_total_downloads} downloads overall.</p>
+<p>Your {$number_of_papers} {$paper_word} in the <a href="http://diginole.lib.fsu.edu/repository">FSU Research Repository</a> attracted {$user_monthly_views} views and {$user_monthly_downloads} downloads in {$last_month}, for a total of {$user_total_views} views and {$user_total_downloads} downloads overall.</p>
 MSG;
 
   // foreach works as work
+  foreach ($works as $work) {
+    $msg .= <<<MSG
+<br/>
+<p><a style="color:{$primary_color};" href="http://diginole.lib.fsu.edu/islandora/object/{$work['pid']}">{$work['title']}</a></p>
+<p>This record has received:</p><br/>
+<table style="border-collapse: collapse;">
+  <tr>
+    <th></th>
+    <th style="border:1px solid black;padding:5px 10px;background-color:{$primary_color};color:{$secondary_color};"><strong>{$last_month} {$last_month_year}</strong></th>
+    <th style="border:1px solid black;padding:5px 10px;background-color:{$primary_color};color:{$secondary_color};"><strong>All-Time</strong></th>    
+  </tr>
+  <tr>
+    <th style="border:1px solid black;padding:5px 10px;background-color:{$primary_color};color:{$secondary_color};"><strong>Views</strong></th>
+    <td style="border:1px solid black;padding:5px 10px;text-align:center;"><strong>{$work['last_month_views']}</strong></td>    
+    <td style="border:1px solid black;padding:5px 10px;text-align:center;"><strong>{$work['total_views']}</strong></td>    
+  </tr>
+  <tr>
+    <th style="border:1px solid black;padding:5px 10px;background-color:{$primary_color};color:{$secondary_color};"><strong>Downloads</strong></th>
+    <td style="border:1px solid black;padding:5px 10px;text-align:center;"><strong>{$work['last_month_downloads']}</strong></td>    
+    <td style="border:1px solid black;padding:5px 10px;text-align:center;"><strong>{$work['total_downloads']}</strong></td>    
+  </tr>
+</table><br/><br/>
+MSG;
+  }
 
   $msg .= <<<MSG
 <p>If you have questions, comments or feedback regarding DigiNole, the FSU Research Repository or this readership report, please <a style="color:#5E0117;" href="http://lib.fsu.edu/drs/repository/contact">let us know</a>.</p>
@@ -166,11 +192,13 @@ DigiNole Support Team<br/>
 (850) 645-2600</p>
 </body>
 </html>
-BODY;
 MSG;
 
-  drupal_mail('islandora_readership_reporter', 'report', 'bjbrown@fsu.edu', language_default());
-  
+  $params = array();
+  $params['subject'] = $subject;
+  $params['body'] = $msg;
+
+  drupal_mail('islandora_readership_reporter', 'report', 'bjbrown@fsu.edu', language_default(), $params, 'no-reply@islandorad.fcla.edu');
 }
 
 function islandora_readership_reporter_get_pid_stats($pid) {
@@ -178,7 +206,7 @@ function islandora_readership_reporter_get_pid_stats($pid) {
   global $base_url;
   $time_last_month = strtotime('-1 month', time());
 
-  $stats = json_decode(file_get_contents("{$base_url}/islandora_usage_stats_callbacks/object_stats/{$pid}"), TRUE);
+  $stats = json_decode(file_get_contents("{$base_url}/islandora_usage_stats_callbacks/object_stats/{$pid['pid']}"), TRUE);
   if (!isset($stats['error'])) {
     $total_views = $stats['legacy-views'] + count($stats['views']);
     $total_downloads = $stats['legacy-downloads'] + count($stats['downloads']);
@@ -191,8 +219,10 @@ function islandora_readership_reporter_get_pid_stats($pid) {
       $last_month_downloads += ($download['time'] > $time_last_month ? 1 : 0);
     }
 
+
     $counts = array(
-      'pid' => $pid, 
+      'pid' => $pid['pid'], 
+      'title' => $pid['title'],
       'total_views' => $total_views, 
       'total_downloads' => $total_downloads,
       'last_month_views' => $last_month_views,

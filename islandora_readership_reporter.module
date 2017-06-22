@@ -7,6 +7,38 @@
 
 
 /**
+ * Implements hook_menu().
+ */
+function islandora_readership_reporter_menu() {
+  $items = array();
+
+  $items['admin/islandora/tools/islandora_readership_reports'] = array(
+    'title' => 'Islandora Readership Reporter Settings',
+    'description' => 'Change behavior of Islandora Readership Reporter.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_readership_reporter_admin_form'),
+    'access arguments' => array('manage readership reports'),
+    'file' => 'includes/admin.form.inc',
+  );
+
+  return $items;
+}
+
+
+/**
+ * Implements hook_permission().
+ */
+function islandora_readership_reporter_permission() {
+  return array(
+    'manage readership reports' => array(
+      'title' => 'Manage readership report configuration',
+      'description' => 'Manage the configuration of the Islandora Readership Reporter module.',
+    ),
+  );
+}
+
+
+/**
  * Implements hook_cron().
  *
  */
@@ -15,7 +47,8 @@ function islandora_readership_reporter_cron() {
   $day = (int) date('d', $now);
 
   // Run on the first of each month
-  $run_date = 20;
+  //$run_date = 1;
+  $run_date = $day;
   if ($day == $run_date) {
     module_load_include('inc', 'islandora_readership_reporter', 'includes/utilities');
     islandora_readership_reporter_run_readership_reports();
@@ -27,7 +60,20 @@ function islandora_readership_reporter_cron() {
  *
  */
 function islandora_readership_reporter_mail($key, &$message, $params) {
-  switch($key) {
+  watchdog('irr', 'sending message 1');
+  switch ($key) {
     case 'report':
+      $message['headers']['Content-Type'] = 'text/html; charset=UTF-8;';
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['body'];
+      break;
+  }
+}
+
+class IslandoraReadershipReporterMailSystem extends DefaultMailSystem {
+  public function format(array $message) {
+    $message['body'] = implode("\n\n", $message['body']);
+    $message['body'] = drupal_wrap_mail($message['body']);
+    return $message;
   }
 }
