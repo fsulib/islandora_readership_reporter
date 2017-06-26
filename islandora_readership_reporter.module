@@ -43,6 +43,7 @@ function islandora_readership_reporter_permission() {
  *
  */
 function islandora_readership_reporter_cron() {
+  watchdog('irr', 'test');
   $now = time();
   $day = (int) date('d', $now);
 
@@ -60,7 +61,6 @@ function islandora_readership_reporter_cron() {
  *
  */
 function islandora_readership_reporter_mail($key, &$message, $params) {
-  watchdog('irr', 'sending message 1');
   switch ($key) {
     case 'report':
       $message['headers']['Content-Type'] = 'text/html; charset=UTF-8;';

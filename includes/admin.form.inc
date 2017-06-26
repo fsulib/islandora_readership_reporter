@@ -14,49 +14,49 @@
  *   The Drupal form definition.
  */
 function islandora_readership_reporter_admin_form() {
-  dsm("test");
   $form = array();
 
-  /*
-  $form['islandora_usage_stats_callbacks_legacy_stats_file_location'] = array(
+  $form['islandora_readership_reporter_debug_mode_email'] = array(
     '#type' => 'textfield',
-    '#title' => t('Legacy statistics file location'),
-    '#description' => t('Path to the legacy stats CSV file (must be in \'pid,views,downloads\' format, or leave field blank to use no legacy stats file)'),
-    '#default_value' => variable_get('islandora_usage_stats_callbacks_legacy_stats_file_location', ''),
+    '#title' => t('Debug email'),
+    '#description' => t('Address where readership reports are sent in debug mode.'),
+    '#default_value' => variable_get('islandora_readership_reporter_debug_mode_email', 'user@example.org'),
   );
 
-  $form['save_configuration'] = array(
-    '#type' => 'submit',
-    '#name' => 'saveConfiguration',
-    '#default_value' => t('Save configuration'),
+  $form['islandora_readership_reporter_debug_mode'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Debug mode'),
+    '#description' => t('Send readership reports to the debug email address instead.'),
+    '#default_value' => variable_get('islandora_readership_reporter_debug_mode', TRUE),
   );
-  */
 
-  return $form;
-}
+  $form['islandora_readership_reporter_email_primary_color'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Primary color code'),
+    '#description' => t('Primary color code to be used in readership report emails, in "#XXXXXX" format.'),
+    '#default_value' => variable_get('islandora_readership_reporter_email_primary_color', '#5E0117'),
+  );
 
-/**
- * Submit handler for the admin form for the Islandora Usage Stats Callbacks module.
- *
- * @param array $form
- *   An array representing a form in Drupal.
- * @param array $form_state
- *   An array containing the Drupal form state.
- */
-function islandora_usage_stats_callbacks_admin_form_submit($form, &$form_state) {
-  /*
-  if ((file_exists($form_state['values']['islandora_usage_stats_callbacks_legacy_stats_file_location'])) || ($form_state['values']['islandora_usage_stats_callbacks_legacy_stats_file_location'] == '')) {
-    variable_set('islandora_usage_stats_callbacks_legacy_stats_file_location', $form_state['values']['islandora_usage_stats_callbacks_legacy_stats_file_location']);
-    if ($form_state['values']['islandora_usage_stats_callbacks_legacy_stats_file_location'] != '') {
-      drupal_set_message("{$form_state['values']['islandora_usage_stats_callbacks_legacy_stats_file_location']} has been set as the new legacy stats file.");
-    }
-    else {
-      drupal_set_message("You have chosen not to use a legacy stats file.");
-    }
-    
-  }
-  else {
-    drupal_set_message("No file exists at '{$form_state['values']['islandora_usage_stats_callbacks_legacy_stats_file_location']}'", 'error');
-  }
-  */
+  $form['islandora_readership_reporter_email_secondary_color'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Secondary color code'),
+    '#description' => t('Secondary color code to be used in readership report emails, in "#XXXXXX" format.'),
+    '#default_value' => variable_get('islandora_readership_reporter_email_secondary_color', '#CEC194'),
+  );
+
+  $form['islandora_readership_reporter_email_banner_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Banner image URL'),
+    '#description' => t('URL to an image to be used as email banner (leave blank to choose no banner)'),
+    '#default_value' => variable_get('islandora_readership_reporter_email_banner_url', ''),
+  );
+
+  $form['islandora_readership_reporter_email_footer'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Email footer'),
+    '#description' => t('HTML code for email footer to come after report.'),
+    '#default_value' => variable_get('islandora_readership_reporter_email_footer', ''),
+  );
+
+  return system_settings_form($form);
 }

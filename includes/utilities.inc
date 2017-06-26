@@ -116,6 +116,8 @@ function islandora_readership_reporter_get_author_pids($person_id) {
 
 function islandora_readership_reporter_run_readership_report($person_data) {
 
+  global $base_url;
+
   $now = time();
   $last_month = date('F', strtotime("-1 month"));
   $last_month_year = date('Y', strtotime("-1 month"));
@@ -124,8 +126,10 @@ function islandora_readership_reporter_run_readership_report($person_data) {
   $number_of_papers = count($person_data['works']);
   $paper_word = ($number_of_papers > 1 ? "papers" : "paper"); 
 
-  $primary_color = "#5E0117";
-  $secondary_color = "#CEC194";
+  $primary_color = variable_get('islandora_readership_reporter_email_primary_color', '#5E0117');
+  $secondary_color = variable_get('islandora_readership_reporter_email_secondary_color', '#CEC194');
+  $banner_link = variable_get('islandora_readership_reporter_email_banner_url', '');
+  $banner_html = (!empty($banner_link) ? "<img src='{$banner_link}' style='width:100%;' />" : "");
 
   $works = array();
   $user_monthly_views = 0;
@@ -153,7 +157,7 @@ function islandora_readership_reporter_run_readership_report($person_data) {
   <title>{$subject}</title>
 </head>
 <body>
-<img src="https://www.lib.fsu.edu/sites/default/files/pictures/fsul-header.png" style="width:100%;"/>
+{$banner_html}
 <p>Greetings {$person_data['name']},</p>
 <p>Your {$number_of_papers} {$paper_word} in the <a href="http://diginole.lib.fsu.edu/repository">FSU Research Repository</a> attracted {$user_monthly_views} views and {$user_monthly_downloads} downloads in {$last_month}, for a total of {$user_total_views} views and {$user_total_downloads} downloads overall.</p>
 MSG;
@@ -184,6 +188,9 @@ MSG;
 MSG;
   }
 
+  $msg .= variable_get('islandora_readership_reporter_email_footer', '');
+
+  /*
   $msg .= <<<MSG
 <p>If you have questions, comments or feedback regarding DigiNole, the FSU Research Repository or this readership report, please <a style="color:#5E0117;" href="http://lib.fsu.edu/drs/repository/contact">let us know</a>.</p>
 <p>Best regards,<br/>
@@ -193,12 +200,18 @@ DigiNole Support Team<br/>
 </body>
 </html>
 MSG;
+  */
 
   $params = array();
   $params['subject'] = $subject;
   $params['body'] = $msg;
+  
+  $debug_mode = variable_get('islandora_readership_reporter_debug_mode', TRUE);
+  $debug_email = variable_get('islandora_readership_reporter_debug_mode_email', 'user@example.com');
+  
+  $to = ($debug_mode ? $debug_email : 'bryjbrown@sharklasers.com'); 
 
-  drupal_mail('islandora_readership_reporter', 'report', 'bjbrown@fsu.edu', language_default(), $params, 'no-reply@islandorad.fcla.edu');
+  drupal_mail('islandora_readership_reporter', 'report', $to, language_default(), $params, "no-reply@{$base_url}");
 }
 
 function islandora_readership_reporter_get_pid_stats($pid) {
